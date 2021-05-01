@@ -36,24 +36,33 @@ def get_availability(days: int, district_ids: List[int], max_age_criteria: int):
 
     all_date_df = None
 
-    for district_id in district_ids:
-        print(f"checking for INP_DATE:{INP_DATE} & DIST_ID:{district_id}")
-        URL = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id={}&date={}".format(district_id, INP_DATE)
+    for DIST_ID in district_ids:
+        print(f"checking for INP_DATE:{INP_DATE} & DIST_ID:{DIST_ID}")
+        URL = "https://cdn-api.co-vin.in/api/v2/appointment/sessions/public/calendarByDistrict?district_id={}&date={}".format(DIST_ID, INP_DATE)
         response = requests.get(URL)
         data = json.loads(response.text)['centers']
-        df = pd.DataFrame(data)
-        df = df.explode("sessions")
-        df['min_age_limit'] = df.sessions.apply(lambda x: x['min_age_limit'])
-        df['available_capacity'] = df.sessions.apply(lambda x: x['available_capacity'])
-        df['date'] = df.sessions.apply(lambda x: x['date'])
-        df = df[["date", "min_age_limit", "available_capacity", "pincode", "name", "state_name", "district_name", "block_name", "fee_type"]]
-        if all_date_df is not None:
-            all_date_df = pd.concat([all_date_df, df])
+        if len(data) != 0:
+            df = pd.DataFrame(data)    
+            df = df.explode("sessions")
+            df['min_age_limit'] = df.sessions.apply(lambda x: x['min_age_limit'])
+            df['available_capacity'] = df.sessions.apply(lambda x: x['available_capacity'])
+            df['date'] = df.sessions.apply(lambda x: x['date'])
+            df = df[["date", "min_age_limit", "available_capacity", "pincode", "name", "state_name", "district_name", "block_name", "fee_type"]]
+            if all_date_df is not None:
+                all_date_df = pd.concat([all_date_df, df])
+            else:
+                all_date_df = df
         else:
-            all_date_df = df
-
-    df = df.drop(["block_name"], axis=1).sort_values(["min_age_limit", "available_capacity"], ascending=[True, False])
-    return df[df.min_age_limit < max_age_criteria]
+            None
+    
+    if all_date_df.shape[0] > 0:
+        all_date_df = all_date_df.drop(["block_name"], axis=1).sort_values(["min_age_limit", "available_capacity"], ascending=[True, False])
+        all_date_df[all_date_df.min_age_limit < 45]
+        all_date_df[all_date_df.min_age_limit < max_age_criteria]
+    else:
+        all_date_df = None
+    
+    return all_date_df
 
 
 def send_email(data_frame, age):
