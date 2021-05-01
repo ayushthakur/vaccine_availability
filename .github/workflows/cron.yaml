@@ -5,7 +5,7 @@ name: cron
 
 on:
   schedule:
-    - cron: '* * * * *' # Every 6 hours
+    - cron: '* * * * *' # Every min
     # - cron: '* * * * *' # Every ~5 min
 
 jobs:
