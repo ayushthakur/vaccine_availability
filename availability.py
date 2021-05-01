@@ -116,7 +116,7 @@ def send_email(data_frame, age):
 if __name__ == "__main__":
     Indore = 314
     Hyderabad = 581
-    dist_ids = [Indore, Hyderabad]
+    dist_ids = [Indore]
     next_n_days = 5
     max_age_criteria = 50
 
